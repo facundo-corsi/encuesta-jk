@@ -1,1 +1,887 @@
-# encuesta-jk
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encuesta de Alimentación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F0;
+    --card: #FFFFFF;
+    --primary: #1B4332;
+    --accent: #52B788;
+    --accent2: #D8F3DC;
+    --text: #1C1C1E;
+    --muted: #6B6B6B;
+    --border: #E2DDD6;
+    --error: #C0392B;
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--primary);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-logo {
+    font-family: 'DM Serif Display', serif;
+    color: #fff;
+    font-size: 1.25rem;
+    letter-spacing: 0.02em;
+  }
+  .nav-tabs {
+    display: flex;
+    gap: 0.25rem;
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.55);
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+  }
+  .tab-btn:hover:not(.active) {
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* FORM PAGE */
+  .form-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+
+  .form-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  .form-header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+  }
+  .form-header p {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--border);
+    transition: box-shadow 0.2s;
+  }
+  .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .q-number {
+    background: var(--primary);
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .q-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--primary);
+    line-height: 1.4;
+  }
+  .q-sub {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+    font-weight: 400;
+  }
+
+  .options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .option-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.875rem;
+  }
+  .option-label:hover {
+    border-color: var(--accent);
+    background: var(--accent2);
+  }
+  .option-label input[type="radio"] {
+    accent-color: var(--primary);
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  .option-label:has(input:checked) {
+    border-color: var(--primary);
+    background: var(--accent2);
+    font-weight: 500;
+  }
+
+  /* Conditional sub-question */
+  .sub-question {
+    display: none;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border);
+  }
+  .sub-question.visible { display: block; }
+  .sub-q-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+    font-style: italic;
+  }
+
+  /* Fields row */
+  .fields-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  @media (max-width: 480px) { .fields-row { grid-template-columns: 1fr; } }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .field-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .field-group input, .field-group select {
+    padding: 0.65rem 0.9rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    color: var(--text);
+    background: var(--card);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field-group input:focus, .field-group select:focus {
+    border-color: var(--primary);
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 1rem;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 0.5rem;
+  }
+  .submit-btn:hover { background: #2D6A4F; transform: translateY(-1px); }
+  .submit-btn:active { transform: translateY(0); }
+
+  .success-msg {
+    display: none;
+    text-align: center;
+    padding: 3rem 1rem;
+    animation: fadeIn 0.4s ease;
+  }
+  .success-msg.visible { display: block; }
+  .success-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+  .success-msg h2 {
+    font-family: 'DM Serif Display', serif;
+    color: var(--primary);
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .success-msg p { color: var(--muted); font-size: 0.9rem; }
+  .new-survey-btn {
+    margin-top: 1.5rem;
+    padding: 0.65rem 1.75rem;
+    background: transparent;
+    border: 1.5px solid var(--primary);
+    color: var(--primary);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .new-survey-btn:hover { background: var(--accent2); }
+
+  /* DASHBOARD PAGE */
+  .dash-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+  }
+  .dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  .dash-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem;
+    color: var(--primary);
+  }
+  .total-badge {
+    background: var(--accent2);
+    color: var(--primary);
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+  }
+  .kpi-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.25rem;
+    color: var(--primary);
+    line-height: 1;
+  }
+  .kpi-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+  .chart-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+
+  .bar-item {
+    margin-bottom: 0.75rem;
+  }
+  .bar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+  }
+  .bar-label { font-size: 0.82rem; color: var(--text); }
+  .bar-count { font-size: 0.8rem; font-weight: 600; color: var(--primary); }
+  .bar-track {
+    background: var(--bg);
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+
+  /* Responses table */
+  .table-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .table-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .clear-btn {
+    background: transparent;
+    border: 1.5px solid #E74C3C;
+    color: #E74C3C;
+    padding: 0.3rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .clear-btn:hover { background: #FDECEA; }
+
+  .responses-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  .responses-table th {
+    background: var(--bg);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .responses-table td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .responses-table tr:last-child td { border-bottom: none; }
+  .responses-table tr:hover td { background: #FAFAF8; }
+
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge-green { background: #D8F3DC; color: #1B4332; }
+  .badge-yellow { background: #FFF3CD; color: #7D5A00; }
+  .badge-red { background: #FDECEA; color: #C0392B; }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+  .empty-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card { animation: fadeIn 0.3s ease both; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">🍽 Encuesta de Alimentación</span>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showPage('form')">Encuesta</button>
+    <button class="tab-btn" onclick="showPage('dashboard')">Dashboard</button>
+  </div>
+</nav>
+
+<!-- FORM PAGE -->
+<div id="page-form" class="page active">
+  <div class="form-wrap">
+    <div class="form-header">
+      <h1>¿Cómo fue su alimentación?</h1>
+      <p>Sus respuestas nos ayudan a mejorar el servicio de alimentación.</p>
+    </div>
+
+    <div id="survey-form">
+      <!-- Patient info -->
+      <div class="card">
+        <div class="fields-row">
+          <div class="field-group">
+            <label>Nombre y Apellido</label>
+            <input type="text" id="nombre" placeholder="Ej. Juan García">
+          </div>
+          <div class="field-group">
+            <label>N° de Habitación</label>
+            <input type="text" id="habitacion" placeholder="Ej. 214">
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Tipificación de Dieta</label>
+          <select id="dieta">
+            <option value="">Seleccionar...</option>
+            <option>R1</option>
+            <option>R1BM</option>
+            <option>N6</option>
+            <option>R1PIC</option>
+            <option>R8 (Procesada)</option>
+            <option>R4</option>
+            <option>R6 (Astringente)</option>
+            <option>SIN TACC</option>
+            <option>R2 (Hipoprotéica)</option>
+            <option>PED</option>
+            <option>R7</option>
+            <option>VEG</option>
+            <option>R5 (Diabéticos)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Q1 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="q-number">1</div>
+          <div>
+            <div class="q-title">Puntualidad en la entrega</div>
+            <div class="q-sub">¿La comida fue entregada dentro del horario previsto (12:30 a 13:00 hs)?</div>
+          </div>
+        </div>
+        <div class="options-grid" id="q1">
+          <label class="option-label"><input type="radio" name="q1" value="Siempre dentro del horario"> Sí, siempre dentro del horario</label>
+          <label class="option-label"><input type="radio" name="q1" value="En ocasiones fuera del horario"> En ocasiones fuera del horario</label>
+          <label class="option-label"><input type="radio" name="q1" value="Frecuentemente fuera del horario"> Frecuentemente fuera del horario</label>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="q-number">2</div>
+          <div>
+            <div class="q-title">Temperatura de los alimentos</div>
+            <div class="q-sub">¿La temperatura al momento de recibirla fue adecuada?</div>
+          </div>
+        </div>
+        <div class="options-grid" id="q2">
+          <label class="option-label"><input type="radio" name="q2" value="Sí, adecuada" onchange="toggleSub()"> Sí, adecuada</label>
+          <label class="option-label"><input type="radio" name="q2" value="No, insuficiente" onchange="toggleSub()"> No, insuficiente</label>
+        </div>
+        <div class="sub-question" id="q2-sub">
+          <div class="sub-q-label">En caso de no haber sido adecuada, la recibió:</div>
+          <div class="options-grid">
+            <label class="option-label"><input type="radio" name="q2b" value="Fría"> Fría</label>
+            <label class="option-label"><input type="radio" name="q2b" value="Tibia"> Tibia</label>
+            <label class="option-label"><input type="radio" name="q2b" value="Excesivamente caliente"> Excesivamente caliente</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="q-number">3</div>
+          <div>
+            <div class="q-title">Calidad de los alimentos</div>
+            <div class="q-sub">¿Cómo calificaría la calidad general de los alimentos recibidos?</div>
+          </div>
+        </div>
+        <div class="options-grid" id="q3">
+          <label class="option-label"><input type="radio" name="q3" value="Excelente"> Excelente</label>
+          <label class="option-label"><input type="radio" name="q3" value="Buena"> Buena</label>
+          <label class="option-label"><input type="radio" name="q3" value="Aceptable"> Aceptable</label>
+          <label class="option-label"><input type="radio" name="q3" value="Mala"> Mala</label>
+        </div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="q-number">4</div>
+          <div>
+            <div class="q-title">Cantidad de la porción</div>
+            <div class="q-sub">¿Considera que la cantidad servida fue suficiente para su necesidad?</div>
+          </div>
+        </div>
+        <div class="options-grid" id="q4">
+          <label class="option-label"><input type="radio" name="q4" value="Sí, fue suficiente"> Sí, fue suficiente</label>
+          <label class="option-label"><input type="radio" name="q4" value="Fue justa"> Fue justa</label>
+          <label class="option-label"><input type="radio" name="q4" value="No, resultó insuficiente"> No, resultó insuficiente</label>
+        </div>
+      </div>
+
+      <!-- Q5 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="q-number">5</div>
+          <div>
+            <div class="q-title">Variedad del menú</div>
+            <div class="q-sub">¿Cómo evalúa la variedad de los menús ofrecidos durante su internación?</div>
+          </div>
+        </div>
+        <div class="options-grid" id="q5">
+          <label class="option-label"><input type="radio" name="q5" value="Muy variada"> Muy variada</label>
+          <label class="option-label"><input type="radio" name="q5" value="Adecuada"> Adecuada</label>
+          <label class="option-label"><input type="radio" name="q5" value="Poco variada"> Poco variada</label>
+          <label class="option-label"><input type="radio" name="q5" value="Repetitiva"> Repetitiva</label>
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="submitForm()">Enviar respuestas →</button>
+    </div>
+
+    <div class="success-msg" id="success-msg">
+      <div class="success-icon">✅</div>
+      <h2>¡Gracias por su opinión!</h2>
+      <p>Sus respuestas fueron registradas correctamente.</p>
+      <button class="new-survey-btn" onclick="resetForm()">Completar otra encuesta</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div id="page-dashboard" class="page">
+  <div class="dash-wrap">
+    <div class="dash-header">
+      <h1 class="dash-title">Dashboard de Resultados</h1>
+      <span class="total-badge" id="total-badge">0 respuestas</span>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-val" id="kpi-total">0</div>
+        <div class="kpi-label">Respuestas</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val" id="kpi-puntual">—</div>
+        <div class="kpi-label">Entrega puntual</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val" id="kpi-temp">—</div>
+        <div class="kpi-label">Temp. adecuada</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val" id="kpi-calidad">—</div>
+        <div class="kpi-label">Calidad buena+</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val" id="kpi-cantidad">—</div>
+        <div class="kpi-label">Porción suficiente</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">📦 Puntualidad en la entrega</div>
+        <div id="chart-q1"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">🌡 Temperatura</div>
+        <div id="chart-q2"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">⭐ Calidad de los alimentos</div>
+        <div id="chart-q3"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">🍽 Cantidad de la porción</div>
+        <div id="chart-q4"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">🥗 Variedad del menú</div>
+        <div id="chart-q5"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">🥼 Distribución por dieta</div>
+        <div id="chart-dieta"></div>
+      </div>
+    </div>
+
+    <!-- Responses table -->
+    <div class="table-card">
+      <div class="table-header">
+        Respuestas individuales
+        <button class="clear-btn" onclick="clearAll()">Borrar todo</button>
+      </div>
+      <div id="table-container">
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          Aún no hay respuestas registradas.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'encuesta_alimentacion_v1';
+
+function getData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+}
+function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (p === 'dashboard') renderDashboard();
+}
+
+function toggleSub() {
+  const v = document.querySelector('input[name="q2"]:checked')?.value;
+  const sub = document.getElementById('q2-sub');
+  if (v === 'No, insuficiente') sub.classList.add('visible');
+  else { sub.classList.remove('visible'); document.querySelectorAll('input[name="q2b"]').forEach(r => r.checked = false); }
+}
+
+function submitForm() {
+  const nombre = document.getElementById('nombre').value.trim();
+  const habitacion = document.getElementById('habitacion').value.trim();
+  const dieta = document.getElementById('dieta').value;
+  const q1 = document.querySelector('input[name="q1"]:checked')?.value;
+  const q2 = document.querySelector('input[name="q2"]:checked')?.value;
+  const q2b = document.querySelector('input[name="q2b"]:checked')?.value;
+  const q3 = document.querySelector('input[name="q3"]:checked')?.value;
+  const q4 = document.querySelector('input[name="q4"]:checked')?.value;
+  const q5 = document.querySelector('input[name="q5"]:checked')?.value;
+
+  if (!nombre || !habitacion || !dieta || !q1 || !q2 || !q3 || !q4 || !q5) {
+    alert('Por favor, completá todos los campos antes de enviar.');
+    return;
+  }
+
+  const entry = {
+    id: Date.now(),
+    fecha: new Date().toLocaleString('es-AR'),
+    nombre, habitacion, dieta, q1, q2, q2b: q2b || null, q3, q4, q5
+  };
+
+  const data = getData();
+  data.push(entry);
+  saveData(data);
+
+  document.getElementById('survey-form').style.display = 'none';
+  document.getElementById('success-msg').classList.add('visible');
+}
+
+function resetForm() {
+  document.getElementById('survey-form').style.display = 'block';
+  document.getElementById('success-msg').classList.remove('visible');
+  document.getElementById('nombre').value = '';
+  document.getElementById('habitacion').value = '';
+  document.getElementById('dieta').value = '';
+  document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+  document.getElementById('q2-sub').classList.remove('visible');
+}
+
+function clearAll() {
+  if (confirm('¿Estás seguro que querés borrar todas las respuestas?')) {
+    saveData([]);
+    renderDashboard();
+  }
+}
+
+function pct(n, total) {
+  return total === 0 ? 0 : Math.round((n / total) * 100);
+}
+
+function renderBar(containerId, data, total) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (total === 0) { el.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;">Sin datos aún.</div>'; return; }
+  el.innerHTML = data.map(([label, count]) => `
+    <div class="bar-item">
+      <div class="bar-row">
+        <span class="bar-label">${label}</span>
+        <span class="bar-count">${count} (${pct(count, total)}%)</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct(count,total)}%"></div></div>
+    </div>
+  `).join('');
+}
+
+function count(arr, field, val) { return arr.filter(r => r[field] === val).length; }
+
+function renderDashboard() {
+  const data = getData();
+  const n = data.length;
+
+  document.getElementById('kpi-total').textContent = n;
+  document.getElementById('total-badge').textContent = n + (n === 1 ? ' respuesta' : ' respuestas');
+
+  const puntual = count(data, 'q1', 'Siempre dentro del horario');
+  const tempOk = count(data, 'q2', 'Sí, adecuada');
+  const calidadOk = data.filter(r => r.q3 === 'Excelente' || r.q3 === 'Buena').length;
+  const cantOk = count(data, 'q4', 'Sí, fue suficiente');
+
+  document.getElementById('kpi-puntual').textContent = n ? pct(puntual, n) + '%' : '—';
+  document.getElementById('kpi-temp').textContent = n ? pct(tempOk, n) + '%' : '—';
+  document.getElementById('kpi-calidad').textContent = n ? pct(calidadOk, n) + '%' : '—';
+  document.getElementById('kpi-cantidad').textContent = n ? pct(cantOk, n) + '%' : '—';
+
+  renderBar('chart-q1', [
+    ['Siempre en horario', count(data, 'q1', 'Siempre dentro del horario')],
+    ['A veces fuera', count(data, 'q1', 'En ocasiones fuera del horario')],
+    ['Frecuentemente fuera', count(data, 'q1', 'Frecuentemente fuera del horario')],
+  ], n);
+
+  renderBar('chart-q2', [
+    ['Adecuada', count(data, 'q2', 'Sí, adecuada')],
+    ['No adecuada', count(data, 'q2', 'No, insuficiente')],
+  ], n);
+
+  renderBar('chart-q3', [
+    ['Excelente', count(data, 'q3', 'Excelente')],
+    ['Buena', count(data, 'q3', 'Buena')],
+    ['Aceptable', count(data, 'q3', 'Aceptable')],
+    ['Mala', count(data, 'q3', 'Mala')],
+  ], n);
+
+  renderBar('chart-q4', [
+    ['Suficiente', count(data, 'q4', 'Sí, fue suficiente')],
+    ['Justa', count(data, 'q4', 'Fue justa')],
+    ['Insuficiente', count(data, 'q4', 'No, resultó insuficiente')],
+  ], n);
+
+  renderBar('chart-q5', [
+    ['Muy variada', count(data, 'q5', 'Muy variada')],
+    ['Adecuada', count(data, 'q5', 'Adecuada')],
+    ['Poco variada', count(data, 'q5', 'Poco variada')],
+    ['Repetitiva', count(data, 'q5', 'Repetitiva')],
+  ], n);
+
+  // Dieta distribution
+  const dietas = {};
+  data.forEach(r => { if (r.dieta) dietas[r.dieta] = (dietas[r.dieta] || 0) + 1; });
+  const dietaArr = Object.entries(dietas).sort((a, b) => b[1] - a[1]);
+  renderBar('chart-dieta', dietaArr, n);
+
+  // Table
+  const tc = document.getElementById('table-container');
+  if (n === 0) {
+    tc.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div>Aún no hay respuestas registradas.</div>';
+    return;
+  }
+
+  const qualityBadge = v => {
+    if (v === 'Excelente' || v === 'Buena') return `<span class="badge badge-green">${v}</span>`;
+    if (v === 'Aceptable') return `<span class="badge badge-yellow">${v}</span>`;
+    return `<span class="badge badge-red">${v}</span>`;
+  };
+  const puntBadge = v => {
+    if (v === 'Siempre dentro del horario') return `<span class="badge badge-green">✓ Puntual</span>`;
+    if (v === 'En ocasiones fuera del horario') return `<span class="badge badge-yellow">Ocasional</span>`;
+    return `<span class="badge badge-red">Frecuente</span>`;
+  };
+
+  tc.innerHTML = `
+    <div style="overflow-x:auto;">
+    <table class="responses-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Paciente</th>
+          <th>Hab.</th>
+          <th>Dieta</th>
+          <th>Puntualidad</th>
+          <th>Temperatura</th>
+          <th>Calidad</th>
+          <th>Cantidad</th>
+          <th>Variedad</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${[...data].reverse().map(r => `
+          <tr>
+            <td style="color:var(--muted);white-space:nowrap">${r.fecha}</td>
+            <td><strong>${r.nombre}</strong></td>
+            <td>${r.habitacion}</td>
+            <td style="white-space:nowrap">${r.dieta}</td>
+            <td>${puntBadge(r.q1)}</td>
+            <td>${r.q2 === 'Sí, adecuada' ? '<span class="badge badge-green">✓ Ok</span>' : `<span class="badge badge-red">${r.q2b || 'No adecuada'}</span>`}</td>
+            <td>${qualityBadge(r.q3)}</td>
+            <td>${r.q4 === 'Sí, fue suficiente' ? '<span class="badge badge-green">Suficiente</span>' : r.q4 === 'Fue justa' ? '<span class="badge badge-yellow">Justa</span>' : '<span class="badge badge-red">Insuf.</span>'}</td>
+            <td>${r.q5}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
